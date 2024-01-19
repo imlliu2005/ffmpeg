@@ -308,6 +308,7 @@ typedef struct VideoState {
 static const AVInputFormat *file_iformat;
 static const char *input_filename;
 static const char *window_title;
+static int window_host_handle = 0; // host 窗口句柄
 static int default_width  = 640;
 static int default_height = 480;
 static int screen_width  = 0;
@@ -3648,6 +3649,7 @@ static const OptionDef options[] = {
     { "framedrop",          OPT_TYPE_BOOL,   OPT_EXPERT, { &framedrop }, "drop frames when cpu is too slow", "" },
     { "infbuf",             OPT_TYPE_BOOL,   OPT_EXPERT, { &infinite_buffer }, "don't limit the input buffer size (useful with realtime streams)", "" },
     { "window_title",       OPT_TYPE_STRING,          0, { &window_title }, "set window title", "window title" },
+    { "window_host",        OPT_TYPE_INT, 0,  { &window_host_handle }, "set window host handle", "window handle" },
     { "left",               OPT_TYPE_INT,    OPT_EXPERT, { &screen_left }, "set the x position for the left of the window", "x pos" },
     { "top",                OPT_TYPE_INT,    OPT_EXPERT, { &screen_top }, "set the y position for the top of the window", "y pos" },
     { "vf",                 OPT_TYPE_FUNC, OPT_FUNC_ARG | OPT_EXPERT, { .func_arg = opt_add_vfilter }, "set video filters", "filter_graph" },
@@ -3795,7 +3797,15 @@ int main(int argc, char **argv)
                 enable_vulkan = 0;
             }
         }
-        window = SDL_CreateWindow(program_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, flags);
+        // window = SDL_CreateWindow(program_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, flags);
+       
+        if (window_host_handle != 0) {
+            window = SDL_CreateWindowFrom(window_host_handle);
+            SDL_HideWindow(window);
+        } else {
+            window = SDL_CreateWindow(program_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, flags);
+        }
+       
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         if (!window) {
             av_log(NULL, AV_LOG_FATAL, "Failed to create window: %s", SDL_GetError());
